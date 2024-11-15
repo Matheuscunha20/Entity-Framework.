@@ -1,0 +1,120 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TaskManagerApi.Data;
+using TaskManagerApi.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace TaskManagerApi.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class TarefaController : ControllerBase
+    {
+        private readonly TaskContext _context;
+
+        public TarefaController(TaskContext context)
+        {
+            _context = context;
+        }
+
+        // GET: api/Tarefa/ObterTodos
+        [HttpGet("ObterTodos")]
+        public async Task<ActionResult<IEnumerable<Tarefa>>> GetTodasTarefas()
+        {
+            return await _context.Tarefas.ToListAsync();
+        }
+
+        // GET: api/Tarefa/ObterPorTitulo/{titulo}
+        [HttpGet("ObterPorTitulo/{titulo}")]
+        public async Task<ActionResult<IEnumerable<Tarefa>>> GetTarefasPorTitulo(string titulo)
+        {
+            var tarefas = await _context.Tarefas
+                .Where(t => t.Titulo.Contains(titulo))
+                .ToListAsync();
+
+            if (tarefas == null || !tarefas.Any())
+                return NotFound();
+
+            return tarefas;
+        }
+
+        // GET: api/Tarefa/ObterPorData/{data}
+        [HttpGet("ObterPorData/{data}")]
+        public async Task<ActionResult<IEnumerable<Tarefa>>> GetTarefasPorData(DateTime data)
+        {
+            var tarefas = await _context.Tarefas
+                .Where(t => t.Data.Date == data.Date)
+                .ToListAsync();
+
+            if (tarefas == null || !tarefas.Any())
+                return NotFound();
+
+            return tarefas;
+        }
+
+        // GET: api/Tarefa/ObterPorStatus/{status}
+        [HttpGet("ObterPorStatus/{status}")]
+        public async Task<ActionResult<IEnumerable<Tarefa>>> GetTarefasPorStatus(string status)
+        {
+            var tarefas = await _context.Tarefas
+                .Where(t => t.Status.Equals(status, StringComparison.OrdinalIgnoreCase))
+                .ToListAsync();
+
+            if (tarefas == null || !tarefas.Any())
+                return NotFound();
+
+            return tarefas;
+        }
+
+        // GET: api/Tarefa/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Tarefa>> GetTarefa(int id)
+        {
+            var tarefa = await _context.Tarefas.FindAsync(id);
+
+            if (tarefa == null)
+                return NotFound();
+
+            return tarefa;
+        }
+
+        // POST: api/Tarefa
+        [HttpPost]
+        public async Task<ActionResult<Tarefa>> PostTarefa(Tarefa tarefa)
+        {
+            _context.Tarefas.Add(tarefa);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetTarefa", new { id = tarefa.Id }, tarefa);
+        }
+
+        // PUT: api/Tarefa/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutTarefa(int id, Tarefa tarefa)
+        {
+            if (id != tarefa.Id)
+                return BadRequest();
+
+            _context.Entry(tarefa).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // DELETE: api/Tarefa/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTarefa(int id)
+        {
+            var tarefa = await _context.Tarefas.FindAsync(id);
+            if (tarefa == null)
+                return NotFound();
+
+            _context.Tarefas.Remove(tarefa);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+    }
+}
